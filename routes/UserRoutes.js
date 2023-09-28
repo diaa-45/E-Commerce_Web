@@ -5,6 +5,7 @@ const bcrypt=require("bcryptjs");
 const jwt=require("jsonwebtoken");
 const { VerifyTokenAndAdmin , VerifyTokenAndAuthorization}=require("../midellewares/verifyTokens")
 const {User,ValidateUpdateUser}=require("../models/User");
+const { ValidateAddOrder, Order } = require("../models/Order");
 //const Cart = require('../models/CartModel');
 
 
@@ -98,27 +99,27 @@ router.delete("/:id", VerifyTokenAndAuthorization, asynchandler(async(req,res)=>
  * @method       POST
  * @access       private (only User Himself)
  */
-router.post('/cart/:userId', VerifyTokenAndAuthorization, asynchandler(
+/*router.post('/order/:userId', VerifyTokenAndAuthorization, asynchandler(
   async (req, res) => {
    
-      const { userId } = req.params;
-      const product_Id  = req.body;
-  
-      const user = await User.findOne({ _id: userId });
-    
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      user.Cart.push(product_Id)
-      await user.save();
-  
-  
-      res.status(201).json({ message: 'Product added to cart' });
-  
+      const { userId } = req.params.userId;
+      const {error}=ValidateAddOrder(req.body);
+      if(error)
+        return res.status(400).json({message: error.details[0].message});
+
+
+      const order = new Order({
+          userId:userId,
+          productId:req.body.productId,
+          quantity:req.body.quantity,
+          status:req.body.status
+      });
+      await order.save();
+
+      res.status(201).json(order);
     }
   
-));
+)); */
 
 
 module.exports=router;
