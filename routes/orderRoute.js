@@ -35,7 +35,7 @@ router.post('/add/:userId', VerifyTokenAndAuthorization, asynchandler(
       if(!userCart){
         const cart = new Cart({
         userId:userId,
-        orderId:order._id
+        orderId:order
         });
         await cart.save();
       }
@@ -81,17 +81,15 @@ router.put("/edit/:id", VerifyTokenAndAuthorization, asynchandler(async(req,res)
  * @access       private ( admin & Himself)
  */
 
-router.delete("/del/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
-  
-    const order =await Order.findById(req.params.id);
-    if(order){
-        await Order.findByIdAndDelete(req.params.id);
-        res.status(200).json({message: "Order has been Deleted successfully"});
-    }else
-      res.status(404).json({message : " Order is not Found"});
-  
+router.delete( "/del/:id", VerifyTokenAndAdmin, asynchandler(async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (order) {
+      await Order.findByIdAndDelete(req.params.id);
+      res.status(200).json({ message: "Order has been Deleted successfully" });
+    } else res.status(404).json({ message: " Order is not Found" });
     
-  }));
+  })
+);
 
 
 
@@ -126,7 +124,7 @@ router.get("/", VerifyTokenAndAdmin, asynchandler(async (req, res) => {
 
 router.get("/:userId", VerifyTokenAndAuthorization ,asynchandler(async(req,res)=>{
   
-    const order = await Order.find({ userId: req.params.userId })
+    const order = await Order.findById(req.params.userId)
       .select("-password")
       .select("-_id")
       .populate(["userId", "productId"]);
