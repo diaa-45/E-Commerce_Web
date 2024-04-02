@@ -9,6 +9,7 @@ const port=process.env.PORT||7000;
 
 app.use(express.json());
 
+
 // Route Apis
 
 app.use("/user",UserRoute);
