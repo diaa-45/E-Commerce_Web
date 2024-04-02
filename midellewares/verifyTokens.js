@@ -1,4 +1,5 @@
 const jwt=require("jsonwebtoken");
+const { Model } = require("mongoose");
 
 // verify Token
 function VerfiyToken(req,res,next){
@@ -20,7 +21,7 @@ function VerfiyToken(req,res,next){
 
 function VerifyTokenAndAuthorization(req,res,next){
     VerfiyToken(req,res,()=>{
-        if(req.user.id == req.params.id || req.user.isAdmin){
+        if(req.user.id === req.params.id || req.user.isAdmin){
             next();
         }else{
             res.status(403).json({message:"you are not allwoed"});
@@ -28,13 +29,15 @@ function VerifyTokenAndAuthorization(req,res,next){
     });
 }
 
-function VerifyTokenAndToAddOeder(req,res,next){
+// Verify to veiw products
+
+function VerifyTokenView(req,res,next){
     VerfiyToken(req,res,()=>{
-        if(req.user._id == req.params.id){
-        }else{
-            res.status(403).json({message:"you are not allwoed"});
+        if(req.user.id){
             next();
-          }
+        }else{
+            res.status(403).json({message:"you are not allwoed , only admin can accses this"});
+        }
     });
 }
 
@@ -44,8 +47,21 @@ function VerifyTokenAndAdmin(req,res,next){
     VerfiyToken(req,res,()=>{
         if(req.user.isAdmin){
             next();
-          }else{
+        }else{
             res.status(403).json({message:"you are not allwoed , only admin can accses this"});
+        }
+    });
+}
+
+
+// verify token & Authorize user to delete order
+
+function VerifyTokenAndDelete(req,res,next){
+    VerfiyToken(req,res,()=>{
+        if(req.user.id == req.params.id[userId] || req.user.isAdmin){
+            next();
+        }else{
+            res.status(403).json({message:"you are not allwoed"});
           }
     });
 }
@@ -54,5 +70,6 @@ module.exports={
     VerfiyToken,
     VerifyTokenAndAuthorization,
     VerifyTokenAndAdmin,
-    VerifyTokenAndToAddOeder
+    VerifyTokenView,
+    VerifyTokenAndDelete
 };

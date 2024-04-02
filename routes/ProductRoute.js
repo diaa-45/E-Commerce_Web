@@ -1,62 +1,9 @@
 const express=require("express");
 const asynchandler=require("express-async-handler");
 const router=express.Router();
-const dotenv=require("dotenv").config();
-const bcrypt=require("bcryptjs");
-const jwt=require("jsonwebtoken");
-const {VerifyTokenAndAdmin}=require("../midellewares/verifyTokens")
+const {VerifyTokenView}=require("../midellewares/verifyTokens")
+const {Products}=require("../models/ProductsModel")
 
-const {Products, ValidateAddProduct,ValidateUpdateProduct}=require("../models/ProductsModel")
-
-
-/**
- * @description  Adding New Product
- * @route        /add
- * @method       post
- * @access       private (only admins)
- */
-
-router.post("/add", VerifyTokenAndAdmin , asynchandler(async(req,res)=>{
-
-    const {error}=ValidateAddProduct(req.body);
-    if(error)
-       return res.status(400).json({message: error.details[0].message});
-
-
-    const product = new Products({
-        name:req.body.name,
-        price:req.body.price,
-        descrip:req.body.descrip
-    });
-    await product.save();
-
-    res.status(201).json(product);
-
-}));
-
-/**
- * @description  Update Product
- * @route        /:id
- * @method       PUT
- * @access       private (only admins)
- */
-
-router.put("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
-  
-    const {error}=ValidateUpdateProduct(req.body);
-    if(error)
-      return res.status(400).json({message: error.details[0].message});
-  
-    const updateProduct= await Products.findByIdAndUpdate(req.params.id,{
-      $set:{
-        name:req.body.name,
-        price: req.body.price,
-        descrip:req.body.descrip
-      }
-    },{new:true});
-  
-    res.status(200).json(updateProduct);
-  }));
 
 /**
  * @description  Get All Products
@@ -65,7 +12,7 @@ router.put("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
  * @access       public 
  */
 
-router.get("/", asynchandler(async(req,res)=>{
+router.get("/",VerifyTokenView, asynchandler(async(req,res)=>{
   
     const product =await Products.find().sort("name");
   
@@ -80,7 +27,7 @@ router.get("/", asynchandler(async(req,res)=>{
  * @access       private (only admin)
  */
 
-router.get("/:id", asynchandler(async(req,res)=>{
+router.get("/:id",VerifyTokenView, asynchandler(async(req,res)=>{
   
     const product =await Products.findById(req.params.id);
     if(product){
@@ -93,23 +40,6 @@ router.get("/:id", asynchandler(async(req,res)=>{
 
 
 
-/**
- * @description  Delete Product By ID
- * @route        /:Id
- * @method       Delete
- * @access       private (only admin)
- */
 
-router.delete("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
-  
-    const product =await Products.findById(req.params.id);
-    if(product){
-        await Products.findByIdAndDelete(req.params.id);
-        res.status(200).json({message: "Product has been Deleted successfully"});
-    }else
-      res.status(404).json({message : " Product is not Found"});
-  
-    
-  }));
 
 module.exports=router;

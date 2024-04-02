@@ -1,6 +1,12 @@
 const Joi = require("joi");
 const mongoose=require("mongoose");
 const productSchema= mongoose.Schema({
+    category:{
+        type:String,
+        required:true,
+        trim:true,
+        enum:["Laptob","Food"]
+    },
     name:{
         type:String,
         required:true,
@@ -28,6 +34,7 @@ const Products=mongoose.model("Products",productSchema);
 
 function ValidateAddProduct(obj){
     const schema=Joi.object({
+        category: Joi.string().trim().required(),
         name: Joi.string().trim().max(100).min(2).required(),
         price: Joi.string().trim().required(), 
         descrip: Joi.string().trim().min(10).max(500).required()

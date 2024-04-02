@@ -60,7 +60,8 @@ function ValidateRegisterUser(obj){
         firstname: Joi.string().trim().max(20).min(2).required(),
         lastname: Joi.string().trim().max(20).min(2).required(), 
         phone: Joi.string().trim().length(11)
-                  .regex(/^(?:(?:\+20|0)?1[0-2]\d{8}|(?:(?:\+20|0)?[2-9]\d{8}))$/).required()
+                  .regex(/^(?:(?:\+20|0)?1[0-2]\d{8}|(?:(?:\+20|0)?[2-9]\d{8}))$/).required(), 
+        isAdmin: Joi.boolean()
     });
     return schema.validate(obj);
 }
