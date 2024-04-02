@@ -1,9 +1,10 @@
 const express=require("express");
 const asynchandler=require("express-async-handler");
 const router=express.Router();
-const { VerifyTokenAndAdmin , VerifyTokenAndAuthorization,VerifyTokenAndToAddOeder}=require("../midellewares/verifyTokens")
+const { VerifyTokenAndAdmin , VerifyTokenAndAuthorization,VerifyTokenAndToAddOeder, VerifyTokenAndDelete}=require("../midellewares/verifyTokens")
 const {Order,ValidateAddOrder,ValidateUpdateOrder}=require("../models/Order");
-const {Cart}=require("../models/Cart");
+
+const Products=require("../models/ProductsModel")
 
 
 
@@ -15,41 +16,26 @@ const {Cart}=require("../models/Cart");
  * @access       private ( admins & Himself)
  */
 
-router.post('/add/:userId', VerifyTokenAndAuthorization, asynchandler(
+router.post('/add/:productId', VerifyTokenAndAuthorization, asynchandler(
   async (req, res) => {
    
-      const userId  = req.params.userId;
       const {error}=ValidateAddOrder(req.body);
       if(error)
         return res.status(400).json({message: error.details[0].message});
 
+      const product= await Products.findById(req.params.productId)
+      if(!product)
+        return res.status(400).json({message: error.details[0].message});
+
       const order = new Order({
-          userId:userId,
-          productId:req.body.productId,
+          userId:req.user.id,
+          productId:req.params.productId,
           quantity:req.body.quantity,
           status:req.body.status
       });
       await order.save();
 
-      const userCart= await Cart.findOne({userId:req.params.userId});
-      if(!userCart){
-        const cart = new Cart({
-        userId:userId,
-        orderId:order
-        });
-        await cart.save();
-      }
-
-      else{
-        userCart.orders.push(order);
-        await userCart.save();
-      }
-
-      
-      
-      res.status(201).json(order);
-    }
-));
+}))
 
 
 /**
@@ -81,13 +67,13 @@ router.put("/edit/:id", VerifyTokenAndAuthorization, asynchandler(async(req,res)
  * @access       private ( admin & Himself)
  */
 
-router.delete( "/del/:id", VerifyTokenAndAdmin, asynchandler(async (req, res) => {
+router.delete( "/del/:id", VerifyTokenAndDelete, asynchandler(async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (order) {
-      await Order.findByIdAndDelete(req.params.id);
-      res.status(200).json({ message: "Order has been Deleted successfully" });
+        await Order.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Order has been Deleted successfully" });
+      
     } else res.status(404).json({ message: " Order is not Found" });
-    
   })
 );
 
@@ -103,8 +89,6 @@ router.delete( "/del/:id", VerifyTokenAndAdmin, asynchandler(async (req, res) =>
 router.get("/", VerifyTokenAndAdmin, asynchandler(async (req, res) => {
     const order = await Order.find()
       .select("-__v")
-      .select("-createdAt")
-      .select("-updatedAt")
       .populate(["userId", "productId"]);
 
     if (!order)
@@ -124,30 +108,29 @@ router.get("/", VerifyTokenAndAdmin, asynchandler(async (req, res) => {
 
 router.get("/:userId", VerifyTokenAndAuthorization ,asynchandler(async(req,res)=>{
   
-    const order = await Order.findById(req.params.userId)
+    const order = await Order.find({userId: req.params.userId})
       .select("-password")
       .select("-_id")
       .populate(["userId", "productId"]);
     if(order){
         res.status(200).json(order);
     }else
-      res.status(404).json({message : "Sorry , order is not Found , you can add it from Products"});
+      res.status(404).json({message : "Sorry , User order is not Found , you can add it from Products"});
   
     
   }));
 
 
   /**
- * @description  Get User Order
+ * @description  Get specific Order
  * @route        /:Id
  * @method       GET
  * @access       private (admin & Himself)
  */
 
-router.get("/:id", VerifyTokenAndAuthorization ,asynchandler(async(req,res)=>{
+router.get("/:id", VerifyTokenAndAdmin ,asynchandler(async(req,res)=>{
   
   const order = await Order.find( req.params.id )
-    
   if(order){
       res.status(200).json(order);
   }else

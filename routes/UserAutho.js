@@ -31,7 +31,8 @@ router.post("/register",asynchandler(async(req,res)=>{
         email:req.body.email,
         username:req.body.username,
         password:req.body.password,
-        phone:req.body.phone
+        phone:req.body.phone,
+        isAdmin:req.body.isAdmin
     });
     await user.save();
 

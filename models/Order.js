@@ -37,7 +37,7 @@ function ValidateAddOrder(obj){
 function ValidateUpdateOrder(obj){
     const schema=Joi.object({
         userId: Joi.type(mongoose.Types.ObjectId).trim(),
-        products: Joi.array().trim(),
+        products: Joi.type(mongoose.Types.ObjectId).trim(),
         status: Joi.string().trim()
     });
     return schema.validate(obj);

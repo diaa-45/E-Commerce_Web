@@ -5,8 +5,8 @@ const bcrypt=require("bcryptjs");
 const jwt=require("jsonwebtoken");
 const { VerifyTokenAndAdmin , VerifyTokenAndAuthorization}=require("../midellewares/verifyTokens")
 const {User,ValidateUpdateUser}=require("../models/User");
-const { ValidateAddOrder, Order } = require("../models/Order");
-//const Cart = require('../models/CartModel');
+
+
 
 
 /**
@@ -81,45 +81,18 @@ router.get("/:id", VerifyTokenAndAuthorization, asynchandler(async(req,res)=>{
  * @access       private (only admin & user himself)
  */
 
-router.delete("/:id", VerifyTokenAndAuthorization, asynchandler(async(req,res)=>{
+router.delete("/:id",VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
   
-  const user =await User.findById(req.params.id).select("-password");
+  const user =await User.findById(req.params.id);
   if(user){
       await User.findByIdAndDelete(req.params.id);
-      res.status(200).json({message: "User has been Deleted successfully"});
+      res.status(200).json({message: "User has been Deleted successfully", data: user});
   }else
     res.status(404).json({message : " User not Found"});
 
   
 }));
 
-/**
- * @description  Add To Cart  By Product ID
- * @route        /:Id
- * @method       POST
- * @access       private (only User Himself)
- */
-/*router.post('/order/:userId', VerifyTokenAndAuthorization, asynchandler(
-  async (req, res) => {
-   
-      const { userId } = req.params.userId;
-      const {error}=ValidateAddOrder(req.body);
-      if(error)
-        return res.status(400).json({message: error.details[0].message});
-
-
-      const order = new Order({
-          userId:userId,
-          productId:req.body.productId,
-          quantity:req.body.quantity,
-          status:req.body.status
-      });
-      await order.save();
-
-      res.status(201).json(order);
-    }
-  
-)); */
 
 
 module.exports=router;

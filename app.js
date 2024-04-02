@@ -4,7 +4,6 @@ const UserRoute=require("./routes/UserRoutes");
 const UserAutho=require("./routes/UserAutho");
 const ProductRoute=require("./routes/ProductRoute");
 const OrderRoute=require("./routes/orderRoute");
-const CartRoute=require("./routes/cartRoute");
 const app=express();
 const port=process.env.PORT||7000;
 
@@ -16,7 +15,10 @@ app.use("/user",UserRoute);
 app.use("/user",UserAutho);
 app.use("/product",ProductRoute);
 app.use("/order",OrderRoute);
-app.use("/cart",CartRoute);
+
+/* app.use("*",()=>{
+     return (" That is Not Valid Route , Provide Valid Please");
+}); */
 
 
 app.listen(port,()=>{

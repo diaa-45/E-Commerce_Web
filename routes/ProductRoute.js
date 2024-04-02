@@ -1,10 +1,10 @@
 const express=require("express");
 const asynchandler=require("express-async-handler");
 const router=express.Router();
-const dotenv=require("dotenv").config();
+require("dotenv").config();
 const bcrypt=require("bcryptjs");
 const jwt=require("jsonwebtoken");
-const {VerifyTokenAndAdmin}=require("../midellewares/verifyTokens")
+const {VerifyTokenAndAdmin,VerifyTokenAndAuthorization,VerifyTokenView}=require("../midellewares/verifyTokens")
 
 const {Products, ValidateAddProduct,ValidateUpdateProduct}=require("../models/ProductsModel")
 
@@ -24,6 +24,7 @@ router.post("/add", VerifyTokenAndAdmin , asynchandler(async(req,res)=>{
 
 
     const product = new Products({
+        category:req.body.category,
         name:req.body.name,
         price:req.body.price,
         descrip:req.body.descrip
@@ -49,6 +50,7 @@ router.put("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
   
     const updateProduct= await Products.findByIdAndUpdate(req.params.id,{
       $set:{
+        category:req.body.category,
         name:req.body.name,
         price: req.body.price,
         descrip:req.body.descrip
@@ -65,7 +67,7 @@ router.put("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
  * @access       public 
  */
 
-router.get("/", asynchandler(async(req,res)=>{
+router.get("/",VerifyTokenView, asynchandler(async(req,res)=>{
   
     const product =await Products.find().sort("name");
   
@@ -80,7 +82,7 @@ router.get("/", asynchandler(async(req,res)=>{
  * @access       private (only admin)
  */
 
-router.get("/:id", asynchandler(async(req,res)=>{
+router.get("/:id",VerifyTokenView, asynchandler(async(req,res)=>{
   
     const product =await Products.findById(req.params.id);
     if(product){
@@ -105,7 +107,7 @@ router.delete("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
     const product =await Products.findById(req.params.id);
     if(product){
         await Products.findByIdAndDelete(req.params.id);
-        res.status(200).json({message: "Product has been Deleted successfully"});
+        res.status(200).json({message: "Product has been Deleted successfully", data: product});
     }else
       res.status(404).json({message : " Product is not Found"});
   
