@@ -1,10 +1,15 @@
 const express=require("express");
-const asynchandler=require("express-async-handler");
 const router=express.Router();
-const { VerifyTokenAndAdmin , VerifyTokenAndAuthorization,VerifyTokenAndToAddOeder, VerifyTokenAndDelete}=require("../midellewares/verifyTokens")
-const {Order,ValidateAddOrder,ValidateUpdateOrder}=require("../models/Order");
-
-const Products=require("../models/ProductsModel")
+const {VerifyTokenAndAdmin,VerifyTokenAndAuthorization,VerifyTokenAndDelete, VerifyTokenView}=require("../midellewares/verifyTokens")
+const {
+  create,
+  getAll,
+  deleteOne,
+  getOne,
+  getUserOrders,
+  update,
+  deleteMany
+}=require('../controller/orders')
 
 
 
@@ -16,26 +21,7 @@ const Products=require("../models/ProductsModel")
  * @access       private ( admins & Himself)
  */
 
-router.post('/add/:productId', VerifyTokenAndAuthorization, asynchandler(
-  async (req, res) => {
-   
-      const {error}=ValidateAddOrder(req.body);
-      if(error)
-        return res.status(400).json({message: error.details[0].message});
-
-      const product= await Products.findById(req.params.productId)
-      if(!product)
-        return res.status(400).json({message: error.details[0].message});
-
-      const order = new Order({
-          userId:req.user.id,
-          productId:req.params.productId,
-          quantity:req.body.quantity,
-          status:req.body.status
-      });
-      await order.save();
-
-}))
+router.post('/add', VerifyTokenView, create)
 
 
 /**
@@ -45,20 +31,7 @@ router.post('/add/:productId', VerifyTokenAndAuthorization, asynchandler(
  * @access       private ( admins & Himself)
  */
 
-router.put("/edit/:id", VerifyTokenAndAuthorization, asynchandler(async(req,res)=>{
-
-    const {error}=ValidateUpdateOrder(req.body);
-    if(error)
-      return res.status(400).json({message: error.details[0].message});
-    
-    const updateOrder= await Order.findByIdAndUpdate(req.params.id,
-    {
-      $set: req.body
-    },
-    {new:true});
-  
-    res.status(200).json(updateOrder);
-  }));
+router.put("/edit/:id", VerifyTokenAndAdmin,update);
 
 /**
  * @description  Delete Order By ID
@@ -67,16 +40,16 @@ router.put("/edit/:id", VerifyTokenAndAuthorization, asynchandler(async(req,res)
  * @access       private ( admin & Himself)
  */
 
-router.delete( "/del/:id", VerifyTokenAndDelete, asynchandler(async (req, res) => {
-    const order = await Order.findById(req.params.id);
-    if (order) {
-        await Order.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Order has been Deleted successfully" });
-      
-    } else res.status(404).json({ message: " Order is not Found" });
-  })
-);
+router.delete( "/delete/:id", VerifyTokenAndDelete, deleteOne);
 
+/**
+ * @description  Delete All orders
+ * @route        /
+ * @method       Delete
+ * @access       private ( admin & Himself)
+ */
+
+router.delete( "/deleteAll", VerifyTokenAndAdmin, deleteMany);
 
 
 /**
@@ -86,17 +59,7 @@ router.delete( "/del/:id", VerifyTokenAndDelete, asynchandler(async (req, res) =
  * @access       private (admins) 
  */
 
-router.get("/", VerifyTokenAndAdmin, asynchandler(async (req, res) => {
-    const order = await Order.find()
-      .select("-__v")
-      .populate(["userId", "productId"]);
-
-    if (!order)
-      return res.status(404).send({ message: "Order database is empty" });
-
-    res.status(200).json(order);
-  })
-);
+router.get("/", VerifyTokenAndAdmin, getAll);
 
 
 /**
@@ -106,19 +69,7 @@ router.get("/", VerifyTokenAndAdmin, asynchandler(async (req, res) => {
  * @access       private (admin & Himself)
  */
 
-router.get("/:userId", VerifyTokenAndAuthorization ,asynchandler(async(req,res)=>{
-  
-    const order = await Order.find({userId: req.params.userId})
-      .select("-password")
-      .select("-_id")
-      .populate(["userId", "productId"]);
-    if(order){
-        res.status(200).json(order);
-    }else
-      res.status(404).json({message : "Sorry , User order is not Found , you can add it from Products"});
-  
-    
-  }));
+router.get("/:id", VerifyTokenAndAuthorization ,getUserOrders);
 
 
   /**
@@ -128,16 +79,7 @@ router.get("/:userId", VerifyTokenAndAuthorization ,asynchandler(async(req,res)=
  * @access       private (admin & Himself)
  */
 
-router.get("/:id", VerifyTokenAndAdmin ,asynchandler(async(req,res)=>{
-  
-  const order = await Order.find( req.params.id )
-  if(order){
-      res.status(200).json(order);
-  }else
-    res.status(404).json({message : "Sorry , order is not Found , you can add it from Products"});
-
-  
-}));
+router.get("/:id", VerifyTokenAndAdmin ,getOne);
 
 
 module.exports=router

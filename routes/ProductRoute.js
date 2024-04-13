@@ -1,13 +1,16 @@
 const express=require("express");
-const asynchandler=require("express-async-handler");
 const router=express.Router();
 require("dotenv").config();
-const bcrypt=require("bcryptjs");
-const jwt=require("jsonwebtoken");
-const {VerifyTokenAndAdmin,VerifyTokenAndAuthorization,VerifyTokenView}=require("../midellewares/verifyTokens")
-
-const {Products, ValidateAddProduct,ValidateUpdateProduct}=require("../models/ProductsModel")
-
+const {VerifyTokenAndAdmin,VerifyTokenView}=require("../midellewares/verifyTokens")
+const {
+  create,
+  deleteAll,
+  deleteOne,
+  getAll,
+  getByCategory,
+  getOne,
+  update
+}=require("../controller/products")
 
 /**
  * @description  Adding New Product
@@ -16,102 +19,64 @@ const {Products, ValidateAddProduct,ValidateUpdateProduct}=require("../models/Pr
  * @access       private (only admins)
  */
 
-router.post("/add", VerifyTokenAndAdmin , asynchandler(async(req,res)=>{
-
-    const {error}=ValidateAddProduct(req.body);
-    if(error)
-       return res.status(400).json({message: error.details[0].message});
-
-
-    const product = new Products({
-        category:req.body.category,
-        name:req.body.name,
-        price:req.body.price,
-        descrip:req.body.descrip
-    });
-    await product.save();
-
-    res.status(201).json(product);
-
-}));
+router.post("/add", VerifyTokenAndAdmin ,create );
 
 /**
  * @description  Update Product
- * @route        /:id
+ * @route        /edit/:id
  * @method       PUT
  * @access       private (only admins)
  */
 
-router.put("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
-  
-    const {error}=ValidateUpdateProduct(req.body);
-    if(error)
-      return res.status(400).json({message: error.details[0].message});
-  
-    const updateProduct= await Products.findByIdAndUpdate(req.params.id,{
-      $set:{
-        category:req.body.category,
-        name:req.body.name,
-        price: req.body.price,
-        descrip:req.body.descrip
-      }
-    },{new:true});
-  
-    res.status(200).json(updateProduct);
-  }));
+router.put("/edit/:id", VerifyTokenAndAdmin, update);
 
 /**
  * @description  Get All Products
- * @route        /
+ * @route        /getAll
  * @method       GET
  * @access       public 
  */
 
-router.get("/",VerifyTokenView, asynchandler(async(req,res)=>{
-  
-    const product =await Products.find().sort("name");
-  
-    res.status(200).json(product);
-  }));
+router.get("/getAll",VerifyTokenView, getAll);
+
+/**
+ * @description  Get All Products At Specific Category
+ * @route        /getCategory/:category
+ * @method       GET
+ * @access       public 
+ */
+
+router.get("/getCategory/:category",VerifyTokenView, getByCategory);
 
 
 /**
  * @description  Get Product By ID
- * @route        /:Id
+ * @route        /getOne/:Id
  * @method       GET
  * @access       private (only admin)
  */
 
-router.get("/:id",VerifyTokenView, asynchandler(async(req,res)=>{
-  
-    const product =await Products.findById(req.params.id);
-    if(product){
-        res.status(200).json(product);
-    }else
-      res.status(404).json({message : "Sorry , Product is not Found , We Will add it Later"});
-  
-    
-  }));
+router.get("/getOne/:id",VerifyTokenView, getOne);
 
 
 
 /**
  * @description  Delete Product By ID
- * @route        /:Id
+ * @route        /deleteOne/:Id
  * @method       Delete
  * @access       private (only admin)
  */
 
-router.delete("/:id", VerifyTokenAndAdmin, asynchandler(async(req,res)=>{
-  
-    const product =await Products.findById(req.params.id);
-    if(product){
-        await Products.findByIdAndDelete(req.params.id);
-        res.status(200).json({message: "Product has been Deleted successfully", data: product});
-    }else
-      res.status(404).json({message : " Product is not Found"});
-  
-    
-  }));
+router.delete("/deleteOne/:id", VerifyTokenAndAdmin, deleteOne);
+
+
+/**
+ * @description  Delete All
+ * @route        /deleteAll
+ * @method       Delete
+ * @access       private (only admin)
+ */
+
+router.delete("/deleteAll", VerifyTokenAndAdmin, deleteAll);
 
 module.exports=router;

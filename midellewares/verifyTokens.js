@@ -1,5 +1,4 @@
 const jwt=require("jsonwebtoken");
-const { Model } = require("mongoose");
 
 // verify Token
 function VerfiyToken(req,res,next){
@@ -58,7 +57,7 @@ function VerifyTokenAndAdmin(req,res,next){
 
 function VerifyTokenAndDelete(req,res,next){
     VerfiyToken(req,res,()=>{
-        if(req.user.id == req.params.id[userId] || req.user.isAdmin){
+        if(req.user._id == req.params.id.user || req.user.isAdmin){
             next();
         }else{
             res.status(403).json({message:"you are not allwoed"});
