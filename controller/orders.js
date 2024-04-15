@@ -1,7 +1,7 @@
 const asynchandler=require("express-async-handler");
 const {Order,ValidateAddOrder,ValidateUpdateOrder}=require("../models/Order");
 const {OrderItem}=require("../models/orderItems");
-const Products=require("../models/ProductsModel");
+const { number } = require("joi");
 
 const create = asynchandler(
   async (req, res) => {
@@ -20,7 +20,6 @@ const create = asynchandler(
             newOrderItem = await newOrderItem.save();
             orderItemsIds.push(newOrderItem._id);
         }
-        console.log(orderItemsIds);
         const order = new Order({
             user:req.user.id,
             orderItems: orderItemsIds,
@@ -29,14 +28,13 @@ const create = asynchandler(
         await order.save();
         
         if(!order)
-            return res.status(400).json({message: error.details[0].message});
-        res.json(order)
+            return res.status(400).json({succses:false,message: error.details[0].message});
+        res.json({succses:true,data: order})
     } catch (error) {
         console.error(`Error saving order items: ${error.message}`);
     }
 
 })
-
 
 const update = asynchandler(async(req,res)=>{
 
@@ -49,47 +47,64 @@ const update = asynchandler(async(req,res)=>{
       $set: req.body
     },
     {new:true});
-  
-    res.status(200).json(updateOrder);
-  });
-
+    if(updateOrder!=null)
+      res.status(200).json({succses:true , data: updateOrder});
+    res.status(401).json({succses:false, message: "The Id isn’t match any order , please enter valid id"})
+});
 
 const deleteOne = asynchandler(async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (order) {
         await Order.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Order has been Deleted successfully" });
+        for(const item in order.orderItems){
+          await OrderItem.findByIdAndDelete(order.orderItems[item])
+        }
+        
+        res.status(200).json({succses:true, message: "Order has been Deleted successfully",data:order });
       
-    } else res.status(404).json({ message: " Order is not Found" });
-  });
+    } else res.status(404).json({succses:false, message: " Order is not Found" });
+});
 
 const deleteMany = asynchandler(async (req, res) => {
     const order = await Order.find();
-    if (order) {
+    if (order.length!=0) {
         await Order.deleteMany();
-        res.status(200).json({ message: "Order has been Deleted successfully" });
+        await OrderItem.deleteMany();
+        res.status(200).json({succses:true,NumberOfOrder:order.length, message: "Order has been Deleted successfully",data:order });
       
-    } else res.status(404).json({succses: true ,message: " Database Order is Empty" });
-  });
+    }else res.status(404).json({succses: true ,message: " Database Order is Empty" });
+});
 
 
 const getAll = asynchandler(async (req, res) => {
-    const order = await Order.find()
-      .select("-__v")
-      .populate("user")
+    const orders = await Order.find()
+      .select("-__v ")
+      .populate("user" , "-password -createdAt -updatedAt -__v -phone -isAdmin")
       .populate({
         path: 'orderItems', populate:{
             path:'product'
         }
       });
 
-    if (!order)
-      return res.status(404).send({ message: "Order database is empty" });
+    if (orders.length!=0)
+      res.status(200).json({succses:true, numberOfOrders: orders.length, data: orders});
 
-    res.status(200).json(order);
-  });
+    res.status(404).send({succses:true, numberOfOrders: orders.length, message: "Order database is empty" });
 
+});
 
+const getAllOrderItems = asynchandler(async (req, res) => {
+  const orderItems = await OrderItem.find()
+    .select("-__v ")
+    .populate('product');
+
+  if (orderItems.length !=0)
+    res.status(200).json({succses:true, NumberOfOrderItems:orderItems.length, data: orderItems});
+    
+  res.status(200).send({succses:true,NumberOfOrderItems:orderItems.length, message: "Order Items database is empty" });
+
+  console.log(orderItems.length);
+});
 
 const getUserOrders=asynchandler(async(req,res)=>{
   
@@ -101,24 +116,21 @@ const getUserOrders=asynchandler(async(req,res)=>{
           path:'product'
       }
     });
-    if(order){
-        res.status(200).json(order);
+    if(order!=0){
+        res.status(200).json({succses:true, Orders: order.length,data:order});
     }else
-      res.status(404).json({message : "Sorry , User order is not Found , you can add it from Products"});
+      res.status(404).json({succses:true , message:"No data for this user"});
   
-    
-  })
-
+})
 
 const getOne=asynchandler(async(req,res)=>{
   
-  const order = await Order.find( req.params.id )
+  const order = await Order.findById(req.params.id)
   if(order){
-      res.status(200).json(order);
+      res.status(200).json({succses:true ,data: order});
   }else
-    res.status(404).json({message : "Sorry , order is not Found , you can add it from Products"});
+    res.status(404).json({succses:true,message : "Sorry , order is not Found , you can add it from Products"});
 
-  
 });
 
 
@@ -129,5 +141,6 @@ module.exports={
     getUserOrders,
     deleteOne,
     deleteMany,
-    update
+    update,
+    getAllOrderItems
 }

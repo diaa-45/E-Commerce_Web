@@ -18,9 +18,9 @@ app.use("/api/v1/product",ProductRoute);
 app.use("/api/v1/order",OrderRoute);
 
 
-/* app.all("/*",function(){
-    return " That is Not Valid Route , Provide Valid Please";
-}); */
+app.all("*", (req,res)=>{
+    res.json({succses:false , mesaage:" That is Not Valid Route , Provide Valid Please"}) ;
+});
 
 app.listen(port,()=>{
     console.log(`listinig ${process.env.NODE_ENV} on port : ${port} ....`);

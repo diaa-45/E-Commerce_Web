@@ -37,7 +37,7 @@ router.put("/edit/:id", VerifyTokenAndAdmin, update);
  * @access       public 
  */
 
-router.get("/getAll",VerifyTokenView, getAll);
+router.get("/getAll", getAll);
 
 /**
  * @description  Get All Products At Specific Category
@@ -46,7 +46,7 @@ router.get("/getAll",VerifyTokenView, getAll);
  * @access       public 
  */
 
-router.get("/getCategory/:category",VerifyTokenView, getByCategory);
+router.get("/getCategory/:category", getByCategory);
 
 
 /**
@@ -56,7 +56,7 @@ router.get("/getCategory/:category",VerifyTokenView, getByCategory);
  * @access       private (only admin)
  */
 
-router.get("/getOne/:id",VerifyTokenView, getOne);
+router.get("/getOne/:id", getOne);
 
 
 

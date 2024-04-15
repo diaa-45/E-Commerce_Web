@@ -1,6 +1,11 @@
 const express=require("express");
 const router=express.Router();
-const {VerifyTokenAndAdmin,VerifyTokenAndAuthorization,VerifyTokenAndDelete, VerifyTokenView}=require("../midellewares/verifyTokens")
+const {
+  VerifyTokenAndAdmin,
+  VerifyTokenAndAuthorization,
+  VerifyTokenAndDelete,
+  VerifyTokenView
+}=require("../midellewares/verifyTokens")
 const {
   create,
   getAll,
@@ -8,10 +13,9 @@ const {
   getOne,
   getUserOrders,
   update,
-  deleteMany
+  deleteMany,
+  getAllOrderItems
 }=require('../controller/orders')
-
-
 
 
 /**
@@ -62,6 +66,17 @@ router.delete( "/deleteAll", VerifyTokenAndAdmin, deleteMany);
 router.get("/", VerifyTokenAndAdmin, getAll);
 
 
+
+/**
+ * @description  Get All Order Items
+ * @route        /
+ * @method       GET
+ * @access       private (admins) 
+ */
+
+router.get("/orderItems", VerifyTokenAndAdmin, getAllOrderItems);
+
+
 /**
  * @description  Get User Order
  * @route        /:Id
@@ -69,7 +84,7 @@ router.get("/", VerifyTokenAndAdmin, getAll);
  * @access       private (admin & Himself)
  */
 
-router.get("/:id", VerifyTokenAndAuthorization ,getUserOrders);
+router.get("/user/:id", VerifyTokenAndAuthorization ,getUserOrders);
 
 
   /**
@@ -79,7 +94,7 @@ router.get("/:id", VerifyTokenAndAuthorization ,getUserOrders);
  * @access       private (admin & Himself)
  */
 
-router.get("/:id", VerifyTokenAndAdmin ,getOne);
+router.get("/getOrder/:id", VerifyTokenAndAdmin ,getOne);
 
 
 module.exports=router
