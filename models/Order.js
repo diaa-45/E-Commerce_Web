@@ -1,18 +1,15 @@
 const Joi = require("joi");
 const mongoose=require("mongoose");
 const orderSchema= mongoose.Schema({
-    userId:{
+    user:{
         type:mongoose.Types.ObjectId,
         ref:"User"
     },
-    productId:{
+    orderItems:[{
         type:mongoose.Types.ObjectId,
-        ref:"Products"
-    },
-    quantity:{
-        type:Number,
-        default:1
-    },
+        ref:"OrderItem",
+        required:true
+    }],
     status:{
         type:String,
         enum:["done","pending"],
@@ -26,9 +23,8 @@ const orderSchema= mongoose.Schema({
 
 function ValidateAddOrder(obj){
     const schema=Joi.object({
-        productId: Joi.string().trim().required(), 
         status: Joi.string().trim().required(),
-        quantity: Joi.number().required(),
+        orderItems: Joi.required(),
     });
     return schema.validate(obj);
 }
@@ -36,8 +32,6 @@ function ValidateAddOrder(obj){
 
 function ValidateUpdateOrder(obj){
     const schema=Joi.object({
-        userId: Joi.type(mongoose.Types.ObjectId).trim(),
-        products: Joi.type(mongoose.Types.ObjectId).trim(),
         status: Joi.string().trim()
     });
     return schema.validate(obj);

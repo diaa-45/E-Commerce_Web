@@ -12,14 +12,14 @@ app.use(express.json());
 
 // Route Apis
 
-app.use("/user",UserRoute);
-app.use("/user",UserAutho);
-app.use("/product",ProductRoute);
-app.use("/order",OrderRoute);
+app.use("/api/v1/user",UserAutho);
+app.use("/api/v1/user",UserRoute);
+app.use("/api/v1/product",ProductRoute);
+app.use("/api/v1/order",OrderRoute);
 
-/* app.use("*",()=>{
-     return (" That is Not Valid Route , Provide Valid Please");
-}); */
+app.all("*", (req,res)=>{
+    res.status(401).json({succses:false , mesaage:" That is Not Valid Route , Provide Valid Please"}) ;
+});
 
 
 app.listen(port,()=>{
